@@ -55,7 +55,7 @@ export default function ClinicDoctorsPage() {
 
   const loadDoctors = useCallback(async () => {
     try {
-      const res = await fetch("/api/clinic/doctors");
+      const res = await fetch("/api/clinic/doctors", { cache: "no-store" });
       const data = await res.json();
       if (res.ok) setDoctors(data.doctors || []);
     } catch (err) {

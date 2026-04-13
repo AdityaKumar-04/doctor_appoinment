@@ -30,7 +30,7 @@ export default function DoctorListingPage() {
   useEffect(() => {
     async function fetchDoctors() {
       try {
-        const res = await fetch("/api/doctors");
+        const res = await fetch("/api/doctors", { cache: "no-store" });
         const data = await res.json();
         if (data.doctors) {
           setDoctors(data.doctors);

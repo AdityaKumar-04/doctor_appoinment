@@ -6,8 +6,10 @@ import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
+import { Search } from "lucide-react";
+import Input from "@/components/ui/Input";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then((res) => res.json());
 
 interface Clinic {
   id: string;
@@ -150,16 +152,13 @@ export default function ClinicsPage() {
 
           {/* Search Bar */}
           <div className="relative max-w-lg mx-auto">
-            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle pointer-events-none">
-              search
-            </span>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by clinic name or location..."
-              className="w-full h-14 pl-12 pr-5 rounded-2xl bg-dark-card border border-dark-border text-text-primary font-medium placeholder:text-text-subtle focus:outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/20 shadow-dark-lg transition-all"
-            />
+             <Input 
+               placeholder="Search by clinic name or location..."
+               value={search}
+               onChange={(e) => setSearch(e.target.value)}
+               icon={<Search size={20} className="text-teal-500" />}
+               className="h-16 px-6 text-base font-bold shadow-2xl shadow-black/40"
+             />
           </div>
         </div>
       </section>
