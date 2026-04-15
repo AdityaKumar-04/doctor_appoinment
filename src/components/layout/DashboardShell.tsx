@@ -170,7 +170,7 @@ export default function DashboardShell({ children, role }: { children: React.Rea
 
   const handleSignOut = async () => {
     await signOut();
-    window.location.href = "/login";
+    router.push("/login");  
   };
 
   // For clinic, split into sections; for others just show flat
