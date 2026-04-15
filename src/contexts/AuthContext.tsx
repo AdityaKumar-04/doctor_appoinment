@@ -94,8 +94,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    console.log("[AuthContext] Signing out with global scope...");
-    await supabase.auth.signOut({ scope: "global" });
+    try {
+      console.log("[AuthContext] Signing out with global scope via server...");
+      // Hit the explicit API route to clear cookies
+      await fetch("/api/auth/logout", { method: "POST" });
+      // Then clean up the client state
+      await supabase.auth.signOut({ scope: "global" });
+    } catch (err) {
+      console.error("[AuthContext] Error during signout:", err);
+    } finally {
+      setUser(null);
+      setRole(null);
+      setProfile(null);
+    }
   };
 
   const refreshProfile = async () => {

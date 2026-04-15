@@ -1,107 +1,81 @@
--- ============================================================
--- PRODUCTION RLS POLICIES — Run in Supabase SQL Editor
--- This file fixes "doctors show locally but not in production"
--- ============================================================
-
--- ── 1. doctors table ─────────────────────────────────────────
+-- Enable Row Level Security (RLS) on all core tables
 ALTER TABLE doctors ENABLE ROW LEVEL SECURITY;
-
--- Public read (for patient booking page, doctor listing)
-DROP POLICY IF EXISTS "public_read_doctors" ON doctors;
-CREATE POLICY "public_read_doctors"
-  ON doctors FOR SELECT
-  USING (true);
-
--- Doctors can update their own row
-DROP POLICY IF EXISTS "doctors_update_own" ON doctors;
-CREATE POLICY "doctors_update_own"
-  ON doctors FOR UPDATE
-  USING (auth.uid() = user_id);
-
--- ── 2. clinics table ─────────────────────────────────────────
 ALTER TABLE clinics ENABLE ROW LEVEL SECURITY;
-
--- Public read (for clinic listing page)
-DROP POLICY IF EXISTS "public_read_clinics" ON clinics;
-CREATE POLICY "public_read_clinics"
-  ON clinics FOR SELECT
-  USING (true);
-
--- Clinic owners can update their own row
-DROP POLICY IF EXISTS "clinics_update_own" ON clinics;
-CREATE POLICY "clinics_update_own"
-  ON clinics FOR UPDATE
-  USING (auth.uid() = user_id);
-
--- ── 3. users (profiles) table ────────────────────────────────
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-
--- Users can read their own profile (used by AuthContext)
-DROP POLICY IF EXISTS "users_read_own" ON users;
-CREATE POLICY "users_read_own"
-  ON users FOR SELECT
-  USING (auth.uid() = id);
-
--- Users can update their own profile
-DROP POLICY IF EXISTS "users_update_own" ON users;
-CREATE POLICY "users_update_own"
-  ON users FOR UPDATE
-  USING (auth.uid() = id);
-
--- ── 4. patient_profiles table (if exists) ────────────────────
-DO $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'patient_profiles') THEN
-    ALTER TABLE patient_profiles ENABLE ROW LEVEL SECURITY;
-
-    -- Drop and recreate
-    DROP POLICY IF EXISTS "patient_profiles_read_own" ON patient_profiles;
-    CREATE POLICY "patient_profiles_read_own"
-      ON patient_profiles FOR SELECT
-      USING (auth.uid() = user_id);
-
-    DROP POLICY IF EXISTS "patient_profiles_update_own" ON patient_profiles;
-    CREATE POLICY "patient_profiles_update_own"
-      ON patient_profiles FOR UPDATE
-      USING (auth.uid() = user_id);
-  END IF;
-END $$;
-
--- ── 5. appointments table ─────────────────────────────────────
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE treatments ENABLE ROW LEVEL SECURITY;
 
--- Patients can read their own appointments
-DROP POLICY IF EXISTS "appointments_read_patient" ON appointments;
-CREATE POLICY "appointments_read_patient"
-  ON appointments FOR SELECT
-  USING (auth.uid() = patient_id);
+-- 1. DOCTORS 
+-- Public read access so patients can see doctors on the frontend
+CREATE POLICY "public_read_doctors" 
+ON doctors FOR SELECT 
+TO public 
+USING (true);
 
--- Doctors can read appointments assigned to them
-DROP POLICY IF EXISTS "appointments_read_doctor" ON appointments;
-CREATE POLICY "appointments_read_doctor"
-  ON appointments FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM doctors
-      WHERE doctors.user_id = auth.uid()
-      AND doctors.id = appointments.doctor_id
-    )
-  );
+CREATE POLICY "doctor_update_self" 
+ON doctors FOR UPDATE 
+TO authenticated 
+USING (user_id = auth.uid());
 
--- ── 6. notifications table ────────────────────────────────────
-DO $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'notifications') THEN
-    ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+-- 2. CLINICS
+-- Public read access so patients can see clinics on the frontend
+CREATE POLICY "public_read_clinics" 
+ON clinics FOR SELECT 
+TO public 
+USING (true);
 
-    DROP POLICY IF EXISTS "notifications_read_own" ON notifications;
-    CREATE POLICY "notifications_read_own"
-      ON notifications FOR SELECT
-      USING (auth.uid() = user_id);
+CREATE POLICY "clinic_update_self" 
+ON clinics FOR UPDATE 
+TO authenticated 
+USING (user_id = auth.uid());
 
-    DROP POLICY IF EXISTS "notifications_update_own" ON notifications;
-    CREATE POLICY "notifications_update_own"
-      ON notifications FOR UPDATE
-      USING (auth.uid() = user_id);
-  END IF;
-END $$;
+-- 3. USERS (Patient Profiles & Role Data)
+-- Users can read their own profile, clinics/doctors can read profiles if necessary (assumed via functions or service role)
+CREATE POLICY "users_read_self" 
+ON users FOR SELECT 
+TO authenticated 
+USING (id = auth.uid());
+
+CREATE POLICY "users_update_self" 
+ON users FOR UPDATE 
+TO authenticated 
+USING (id = auth.uid());
+
+-- 4. APPOINTMENTS
+-- Patients see their own, doctors see theirs, clinics see theirs
+CREATE POLICY "appointments_select_access" 
+ON appointments FOR SELECT 
+TO authenticated 
+USING (
+  patient_id = auth.uid() OR 
+  doctor_id = auth.uid() OR 
+  EXISTS (SELECT 1 FROM doctors WHERE doctors.id = appointments.doctor_id AND doctors.clinic_id = (SELECT id FROM clinics WHERE user_id = auth.uid()))
+);
+
+CREATE POLICY "appointments_insert_access" 
+ON appointments FOR INSERT 
+TO authenticated 
+WITH CHECK (patient_id = auth.uid() OR doctor_id = auth.uid());
+
+CREATE POLICY "appointments_update_access" 
+ON appointments FOR UPDATE 
+TO authenticated 
+USING (
+  patient_id = auth.uid() OR 
+  doctor_id = auth.uid() OR 
+  EXISTS (SELECT 1 FROM doctors WHERE doctors.id = appointments.doctor_id AND doctors.clinic_id = (SELECT id FROM clinics WHERE user_id = auth.uid()))
+);
+
+-- 5. TREATMENTS
+-- Patients see their own treatments, doctors see theirs, etc.
+CREATE POLICY "treatments_select_access" 
+ON treatments FOR SELECT 
+TO authenticated 
+USING (
+  patient_id = auth.uid() OR 
+  doctor_id = auth.uid()
+);
+
+-- Note: Ensure Supabase triggers update cache or refresh schemas if needed
+-- To reload PostgREST schema cache:
+-- NOTIFY pgrst, 'reload schema';

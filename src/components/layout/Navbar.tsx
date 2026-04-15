@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
 
 // Pages where logged-in patients use the Sidebar — Navbar must be hidden
 const PATIENT_SHELL_ROUTES = [
@@ -36,13 +37,28 @@ export default function Navbar() {
   const router = useRouter();
   const { user, profile, role, loading, signOut } = useAuth();
 
+  const [mounted, setMounted] = useState(false);
+
+  // Avoid hydration mismatch by waiting for mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || loading) {
+    return (
+      <nav className="fixed top-0 w-full z-50 bg-slate-900/90 backdrop-blur-md border-b border-dark-border h-16 flex items-center px-6 md:px-10">
+         <div className="w-8 h-8 rounded-lg bg-slate-800 animate-pulse" />
+      </nav>
+    );
+  }
+
   // Hide Navbar on patient portal pages (Sidebar handles nav)
-  if (!loading && user && role === "patient" && isPatientShellRoute(pathname)) {
+  if (user && role === "patient" && isPatientShellRoute(pathname)) {
     return null;
   }
 
   // Hide Navbar on all dashboard/panel pages (DashboardShell handles nav)
-  if (!loading && user && isDashboardRoute(pathname)) {
+  if (user && isDashboardRoute(pathname)) {
     return null;
   }
 

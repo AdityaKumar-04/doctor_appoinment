@@ -31,12 +31,18 @@ export default function DoctorListingPage() {
     async function fetchDoctors() {
       try {
         const res = await fetch("/api/doctors", { cache: "no-store" });
+        if (!res.ok) {
+           throw new Error(`Failed to fetch: ${res.status}`);
+        }
         const data = await res.json();
-        if (data.doctors) {
+        if (data && data.doctors) {
           setDoctors(data.doctors);
+        } else {
+          setDoctors([]); // Fallback to empty array
         }
       } catch (error) {
         console.error("Failed to fetch doctors:", error);
+        setDoctors([]); // Ensure ui doesn't crash on undefined
       } finally {
         setLoading(false);
       }
