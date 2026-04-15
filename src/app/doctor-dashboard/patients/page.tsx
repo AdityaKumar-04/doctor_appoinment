@@ -45,7 +45,7 @@ export default function DoctorPatientsPage() {
   const loadPatients = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch(`/api/appointments?userId=${user.id}&role=doctor`);
+      const res = await fetch(`/api/appointments?userId=${user.id}&role=doctor`, { cache: "no-store" });
       const data = await res.json();
 
       if (data.appointments) {

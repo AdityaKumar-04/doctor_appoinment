@@ -1,6 +1,6 @@
 import useSWR from "swr";
 
-const fetcher = (url: string) => fetch(url).then(r => {
+const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then(r => {
     if (!r.ok) throw new Error("Failed to fetch data");
     return r.json();
 });

@@ -25,7 +25,7 @@ import Button from "@/components/ui/Button";
 import Card, { CardHeader, CardTitle } from "@/components/ui/Card";
 import { Doctor } from "@/utils/types";
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then(res => res.json());
 
 const ClinicDashboardChart = dynamic(() => import('@/components/charts/ClinicDashboardChart'), {
   ssr: false,

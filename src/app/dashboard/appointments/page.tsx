@@ -48,7 +48,7 @@ export default function AppointmentsPage() {
 
   const fetchAppointments = useCallback(async (userId: string) => {
     try {
-      const res = await fetch(`/api/appointments?userId=${userId}&role=patient`);
+      const res = await fetch(`/api/appointments?userId=${userId}&role=patient`, { cache: "no-store" });
       const data = await res.json();
       if (data.appointments) setAppointments(data.appointments);
     } catch (err) {

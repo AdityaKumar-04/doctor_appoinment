@@ -17,7 +17,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then(res => res.json());
 
 function formatTime(t: string) {
   try {

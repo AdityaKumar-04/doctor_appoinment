@@ -26,9 +26,12 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  // Memoize the Supabase client — creating it inline on every render causes listener leaks
+  const [supabase] = useState(() =>
+    createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
   );
 
   const [user, setUser] = useState<User | null>(null);
@@ -44,7 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("id", userId)
       .single();
 
-    if (error || !profileData) return null;
+    if (error || !profileData) {
+      console.warn("[AuthContext] fetchProfile error:", error?.message);
+      return null;
+    }
     return profileData;
   };
 
@@ -55,10 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const dbProfile = await fetchProfile(session.user.id);
       setProfile(dbProfile);
       setRole((dbProfile?.role as UserRole) ?? null);
+      console.log("[AuthContext] Session loaded, role:", dbProfile?.role);
     } else {
       setUser(null);
       setRole(null);
       setProfile(null);
+      console.log("[AuthContext] No active session found.");
     }
     setLoading(false);
   };
@@ -67,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("[AuthContext] Auth event:", event);
       if (event === "SIGNED_OUT" || !session) {
         setUser(null);
         setRole(null);
@@ -85,7 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    console.log("[AuthContext] Signing out with global scope...");
+    await supabase.auth.signOut({ scope: "global" });
   };
 
   const refreshProfile = async () => {
