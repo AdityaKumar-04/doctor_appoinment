@@ -30,11 +30,11 @@ TO authenticated
 USING (user_id = auth.uid());
 
 -- 3. USERS (Patient Profiles & Role Data)
--- Users can read their own profile, clinics/doctors can read profiles if necessary (assumed via functions or service role)
-CREATE POLICY "users_read_self" 
+-- Users need basic public read so that doctor/clinic APIs joining users can resolve names publicly!
+CREATE POLICY "public_read_users" 
 ON users FOR SELECT 
-TO authenticated 
-USING (id = auth.uid());
+TO public 
+USING (true);
 
 CREATE POLICY "users_update_self" 
 ON users FOR UPDATE 
@@ -78,4 +78,4 @@ USING (
 
 -- Note: Ensure Supabase triggers update cache or refresh schemas if needed
 -- To reload PostgREST schema cache:
--- NOTIFY pgrst, 'reload schema';
+NOTIFY pgrst, 'reload schema';

@@ -9,6 +9,7 @@ export default function RegisterClinicPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -155,17 +156,53 @@ export default function RegisterClinicPage() {
               </div>
               
               <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Medical License / Credentials (PDF)</label>
-              <div
-                className="border-2 border-dashed border-dark-border bg-slate-800/30 rounded-2xl p-8 text-center hover:border-teal-500/50 hover:bg-teal-500/5 transition-all cursor-pointer group"
-                onClick={() => fileRef.current?.click()}
-              >
-                <div className="w-14 h-14 bg-slate-800 border border-dark-border rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-teal-500/20 group-hover:border-teal-500/30 transition-colors">
-                  <span className="material-symbols-outlined text-2xl text-text-muted group-hover:text-teal-400 transition-colors">backup</span>
+              
+              {!selectedFile ? (
+                <div
+                  className="border-2 border-dashed border-dark-border bg-slate-800/30 rounded-2xl p-8 text-center hover:border-teal-500/50 hover:bg-teal-500/5 transition-all cursor-pointer group"
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <div className="w-14 h-14 bg-slate-800 border border-dark-border rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-teal-500/20 group-hover:border-teal-500/30 transition-colors">
+                    <span className="material-symbols-outlined text-2xl text-text-muted group-hover:text-teal-400 transition-colors">backup</span>
+                  </div>
+                  <p className="text-sm font-bold text-text-primary">Click to upload your medical credentials</p>
+                  <p className="text-xs text-text-subtle mt-1 font-medium">PDF format only, maximum 10MB</p>
                 </div>
-                <p className="text-sm font-bold text-text-primary">Click to upload your medical credentials</p>
-                <p className="text-xs text-text-subtle mt-1 font-medium">PDF format only, maximum 10MB</p>
-                <input ref={fileRef} name="document" type="file" accept=".pdf" className="hidden" />
-              </div>
+              ) : (
+                <div className="bg-slate-800/80 border border-teal-500/30 rounded-2xl p-5 flex items-center justify-between shadow-lg shadow-teal-500/5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-teal-500/15 border border-teal-500/20 rounded-xl flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-teal-400 text-2xl">picture_as_pdf</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-extrabold text-white truncate max-w-[180px] sm:max-w-[300px]">{selectedFile.name}</p>
+                      <p className="text-xs text-teal-400/80 font-medium mt-0.5">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      if (fileRef.current) fileRef.current.value = "";
+                    }}
+                    className="w-10 h-10 rounded-full bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center text-red-400 hover:text-red-300 transition-colors shrink-0"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">delete</span>
+                  </button>
+                </div>
+              )}
+              
+              <input 
+                ref={fileRef} 
+                name="document" 
+                type="file" 
+                accept=".pdf" 
+                className="hidden" 
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setSelectedFile(file);
+                }} 
+              />
             </div>
 
             {/* Submit */}

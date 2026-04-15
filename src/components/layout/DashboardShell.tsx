@@ -68,6 +68,7 @@ const NAV_ITEMS: NavItem[] = [
   
   { label: "System Admin", href: "/admin", icon: <LayoutDashboard size={20} />, roles: ["admin"] },
   { label: "Users", href: "/admin/users", icon: <Users size={20} />, roles: ["admin"] },
+  { label: "Clinic Requests", href: "/admin/clinic-requests", icon: <ClipboardList size={20} />, roles: ["admin"] },
   { label: "Clinics", href: "/admin/clinics", icon: <Building2 size={20} />, roles: ["admin"] },
   { label: "Doctors", href: "/admin/doctors", icon: <Stethoscope size={20} />, roles: ["admin"] },
   { label: "Patients", href: "/admin/patients", icon: <Users2 size={20} />, roles: ["admin"] },
@@ -79,7 +80,7 @@ const NAV_ITEMS: NavItem[] = [
 
 const ADMIN_SECTIONS: { title: string; hrefs: string[] }[] = [
   { title: "Overview", hrefs: ["/admin"] },
-  { title: "Users", hrefs: ["/admin/users", "/admin/clinics", "/admin/doctors", "/admin/patients"] },
+  { title: "Users", hrefs: ["/admin/users", "/admin/clinic-requests", "/admin/clinics", "/admin/doctors", "/admin/patients"] },
   { title: "Finance", hrefs: ["/admin/payments"] },
   { title: "Support", hrefs: ["/admin/helpdesk", "/admin/complaints"] },
   { title: "System", hrefs: ["/admin/settings"] },
@@ -125,6 +126,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/clinic-dashboard/settings": "Settings",
   "/admin": "System Admin",
   "/admin/users": "User Directory",
+  "/admin/clinic-requests": "Clinic Registrations",
   "/admin/clinics": "Clinic Management",
   "/admin/doctors": "Doctor Management",
   "/admin/patients": "Patient Management",
